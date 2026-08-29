@@ -3,6 +3,8 @@
 
 A modern, responsive Developer Productivity Dashboard built with **React**, **Tailwind CSS**, and **Vite** as part of the **Innovation Hacks Full Stack Development Internship (Task 1)**.
 
+![alt text](<Screenshot 2026-08-29 092430.png>)
+![alt text](<Screenshot 2026-08-29 092441.png>)
 ---
 
 ## 🚀 Features
@@ -13,7 +15,8 @@ A modern, responsive Developer Productivity Dashboard built with **React**, **Ta
 - **Interactive Checklists**: Real-time status toggling directly updates open task metrics.
 - **Robust UI States**: Built-in loading skeletons (`animate-pulse`) and custom empty-state fallbacks for unmatched queries.
 - **Fully Responsive**: Optimized for mobile, tablet, and desktop viewports.
-
+- [Demo-Video](https://drive.google.com/file/d/1MbvTNF2w0EB_2hszRwhUZnFN04ufCouV/view)
+- [Live-Project](https://dev-pulse-seven-blue.vercel.app/)
 ---
 
 ## 🛠️ Tech Stack
@@ -49,8 +52,7 @@ src/
 
 **1. Clone the repository**
 
-- git clone [https://github.com/](https://github.com/)<YOUR_GITHUB_USERNAME>/<REPO_NAME>.git
-cd <REPO_NAME>.
+- git clone https://github.com/CrshIVam16/DevPulse.git
 
 **2. Install dependencies**
 
