@@ -124,10 +124,6 @@ DEVPULSE/
 - npm run dev
 - Backend runs at: http://localhost:5000/api
 
-**3. Live Links**
-- [Demo-Video](https://drive.google.com/file/d/1MbvTNF2w0EB_2hszRwhUZnFN04ufCouV/view)
-- [Live-Project](https://dev-pulse-seven-blue.vercel.app/)
-
 ---
 
 ## 🔗 Live Links
