@@ -23,5 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 myfile.md
+read.md
 
 .env
