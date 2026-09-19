@@ -1,13 +1,17 @@
-import { projects } from "../data/store.js";
+
+import Project from "../models/Project.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
 // GET /api/projects
-export const getProjects = (req, res, next) => {
+export const getProjects = async (req, res, next) => {
     try {
+        // Populates the owner user's basic profile
+        const projects = await Project.find().populate("userId", "name email");
+
         res.status(200).json({
             success: true,
             count: projects.length,
-            data: projects
+            data: projects,
         });
     } catch (error) {
         next(error);
@@ -15,10 +19,10 @@ export const getProjects = (req, res, next) => {
 };
 
 // GET /api/projects/:id
-export const getProjectById = (req, res, next) => {
+export const getProjectById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const project = projects.find((p) => p.id === id);
+        const project = await Project.findById(id).populate("userId", "name email");
 
         if (!project) {
             throw new ApiError(`Project with ID '${id}' not found`, 404);
@@ -26,7 +30,7 @@ export const getProjectById = (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            data: project
+            data: project,
         });
     } catch (error) {
         next(error);
@@ -34,24 +38,22 @@ export const getProjectById = (req, res, next) => {
 };
 
 // POST /api/projects
-export const createProject = (req, res, next) => {
+export const createProject = async (req, res, next) => {
     try {
-        const { title, description, status = "Planning", userId = "user-1" } = req.body;
+        const { title, description, status, progress, userId } = req.body;
 
-        const newProject = {
-            id: `proj-${Date.now()}`,
+        const newProject = await Project.create({
             title: title.trim(),
             description: description || "",
-            status,
-            userId
-        };
-
-        projects.push(newProject);
+            status: status || "Planning",
+            progress: progress || 0,
+            userId,
+        });
 
         res.status(201).json({
             success: true,
             message: "Project created successfully",
-            data: newProject
+            data: newProject,
         });
     } catch (error) {
         next(error);

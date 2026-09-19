@@ -11,7 +11,7 @@
 
 - [x] **Task 1: Modern Frontend Development** (Completed)
 - [x] **Task 2: Backend & REST API Development** (Completed)
-- [ ] **Task 3: Persistent Data Layer (Database Integration)** (Upcoming)
+- [x] **Task 3: Persistent Data Layer (Database Integration)** (Completed)
 - [ ] **Task 4: AI-Powered Platform & Full-Stack Deployment** (Upcoming)
 
 ---
@@ -36,39 +36,49 @@ Built a single-page productivity dashboard emphasizing component reusability, re
 
 ## 🛠️ Task 2: Backend & REST API (Completed)
 
-Designed and implemented a decoupled, modular Express.js REST API powering user metrics, projects, and task management with centralized error handling and strict input validation.
+Designed and implemented a modular Express.js REST API powering user metrics, projects, and task lifecycles with centralized error handling and strict input validation[cite: 1, 2].
 
 ### Key Features
-- **Modular Controller-Route Architecture:** Decoupled routes, controllers, and in-memory stateful store.
-- **Task Lifecycle & Status Management:** Full CRUD handling for tasks, supporting status transitions (`todo`, `in-progress`, `done`) and query-based filtering.
-- **Strict Input Validation:** Route-level middleware rejecting malformed payloads and invalid enum values before controller execution.
-- **Centralized Error Handling:** Global error-handling middleware returning standardized JSON responses with accurate HTTP status codes (`200`, `201`, `400`, `404`, `500`).
-- **Environment Security:** Isolated environment variable handling via `dotenv` and safe configuration templates.
+- **Modular Controller-Route Architecture:** Decoupled routes, controllers, and operational handlers following MVC standards[cite: 1, 2].
+- **Task Lifecycle & Status Management:** Complete CRUD endpoints supporting status transitions (`todo`, `in-progress`, `done`) and query-based filtering (`?status=`, `?priority=`)[cite: 2].
+- **Strict Input Validation:** Route-level middleware rejecting malformed payloads and invalid enum values with `400 Bad Request`[cite: 2].
+- **Centralized Error Handling:** Global error-handling middleware returning standardized JSON responses with accurate HTTP status codes (`200`, `201`, `400`, `404`, `500`)[cite: 2].
+- **Environment Security:** Isolated environment variable handling via `dotenv` with safe configuration templates (`.env.example`)[cite: 1, 2].
+
+---
+
+## 🗄️ Task 3: Persistent Data Layer (Completed)
+
+Replaced temporary in-memory storage with a persistent database architecture powered by **MongoDB** and **Mongoose**, establishing schema-level constraints and relational document references[cite: 1, 3].
+
+### Key Features
+- **Relational Data Modeling:** Model relationships configured using Mongoose `ObjectId` references (`Task` referencing `User` and `Project`; `Project` referencing `User`)[cite: 1, 3].
+- **Schema-Level Validation & Enums:** Enforced regex email checks, required title constraints, and status/priority enum whitelisting directly at the database layer[cite: 3].
+- **Populated Native CRUD:** Upgraded controllers with asynchronous Mongoose queries (`find`, `findById`, `findByIdAndUpdate`, `findByIdAndDelete`) combined with `.populate()` lookups[cite: 3].
+- **Database Seeder:** Created an automated database seeder (`src/config/seeder.js`) populating consistent test fixtures matching the frontend interface[cite: 1, 3].
 
 ### API Reference
 | Method | Endpoint | Description | Status Codes |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/health` | Health check route | `200` |
-| `GET` | `/api/users/:id` | Fetch user profile & productivity score | `200`, `404` |
-| `PATCH` | `/api/users/:id` | Update user details | `200`, `404` |
-| `GET` | `/api/projects` | List all projects | `200` |
-| `POST` | `/api/projects` | Create a new project (validated) | `201`, `400` |
+| `GET` | `/api/users/:id` | Fetch user profile & productivity score from DB | `200`, `404` |
+| `PATCH` | `/api/users/:id` | Update user details (validated) | `200`, `404` |
+| `GET` | `/api/projects` | List all projects (populated with user) | `200` |
+| `GET` | `/api/projects/:id` | Fetch project by ID (populated with user) | `200`, `404` |
+| `POST` | `/api/projects` | Create a persistent project document | `201`, `400` |
 | `GET` | `/api/tasks` | Get tasks (supports `?status=`, `?priority=`, `?projectId=`) | `200` |
-| `POST` | `/api/tasks` | Create a new task (validated) | `201`, `400` |
-| `PUT` | `/api/tasks/:id` | Update task details & status (validated) | `200`, `400`, `404` |
-| `DELETE` | `/api/tasks/:id` | Delete task by ID | `200`, `404` |
+| `POST` | `/api/tasks` | Create task with relational foreign keys | `201`, `400` |
+| `PUT` | `/api/tasks/:id` | Update task details & status in DB | `200`, `400`, `404` |
+| `DELETE` | `/api/tasks/:id` | Permanently delete task document | `200`, `404` |
 
 ---
 
 ## 🔮 Upcoming Milestones
 
-- **Task 3: Persistent Data Layer**
-  - Integrate a database (MongoDB / Mongoose) to replace the temporary in-memory store.
-  - Implement relational schemas and data validation models linking Users, Projects, and Tasks.
 - **Task 4: AI Integration & Full-Stack Deployment**
-  - Add authentication and protected routes.
-  - Integrate an AI service for automatic task generation and summarization.
-  - Deploy the complete application to cloud hosting (Vercel / Render).
+  - Add user registration, login, and JWT-protected routes.
+  - Integrate an AI service for automatic task generation, summarization, or priority recommendations.
+  - Connect the React frontend to live backend endpoints and deploy the complete system to cloud hosting (Vercel & Render).
 
 ---
 
@@ -85,12 +95,13 @@ DEVPULSE/
 │   ├── package.json
 │   └── vite.config.js
 │
-├── backend/                      # Task 2: Express REST API
+├── backend/                      # Tasks 2 & 3: Express REST API + MongoDB
 │   ├── src/
-│   │   ├── controllers/          # Business logic handlers
+│   │   ├── config/               # Database connection (db.js) & seeder.js
+│   │   ├── models/               # Mongoose Schemas (User, Project, Task)
+│   │   ├── controllers/          # Asynchronous DB CRUD handlers
 │   │   ├── routes/               # Express sub-routers
-│   │   ├── middleware/           # Validation & centralized error handlers
-│   │   ├── data/                 # Stateful in-memory store
+│   │   ├── middleware/           # Input validation & centralized error handlers
 │   │   ├── app.js                # Express app setup & route mounting
 │   │   └── server.js             # HTTP server entrypoint
 │   ├── .env.example              # Environment variables template
@@ -114,15 +125,14 @@ DEVPULSE/
 - cd frontend
 - npm install
 - npm run dev
-- Frontend runs at: http://localhost:5173
 
-**3. Backend Setup (Task 2)**
+**3. Backend & DB Setup (Task 2)**
 
 - cd backend
 - npm install
 - cp .env.example .env
+- npm run seed
 - npm run dev
-- Backend runs at: http://localhost:5000/api
 
 ---
 
@@ -132,6 +142,7 @@ DEVPULSE/
 
 - [Task-1](https://drive.google.com/file/d/1MbvTNF2w0EB_2hszRwhUZnFN04ufCouV/view)
 - [Task-2](https://drive.google.com/file/d/1VFpWbKJPlWHtbqnS1cWkO_DCG-acvsDs/view?usp=sharing)
+- [Task-3](https://drive.google.com/file/d/1ph9oJakKwXxmIIaArei35DSGsWyXX3h-/view?usp=sharing)
 
 **Live Project**
 

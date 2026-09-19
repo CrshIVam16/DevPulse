@@ -1,11 +1,12 @@
-import { users } from "../data/store.js";
+
+import User from "../models/User.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
 // GET /api/users/:id
-export const getUserById = (req, res, next) => {
+export const getUserById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const user = users.find((u) => u.id === id);
+        const user = await User.findById(id);
 
         if (!user) {
             throw new ApiError(`User with ID '${id}' not found`, 404);
@@ -13,7 +14,7 @@ export const getUserById = (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            data: user
+            data: user,
         });
     } catch (error) {
         next(error);
@@ -21,27 +22,29 @@ export const getUserById = (req, res, next) => {
 };
 
 // PATCH /api/users/:id
-export const updateUser = (req, res, next) => {
+export const updateUser = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const userIndex = users.findIndex((u) => u.id === id);
+        const { name, role, productivityScore } = req.body;
 
-        if (userIndex === -1) {
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            {
+                ...(name && { name: name.trim() }),
+                ...(role && { role: role.trim() }),
+                ...(productivityScore !== undefined && { productivityScore }),
+            },
+            { new: true, runValidators: true } // Returns updated doc & runs schema checks
+        );
+
+        if (!updatedUser) {
             throw new ApiError(`User with ID '${id}' not found`, 404);
         }
-
-        const { name, role, productivityScore } = req.body;
-        users[userIndex] = {
-            ...users[userIndex],
-            ...(name && { name }),
-            ...(role && { role }),
-            ...(productivityScore !== undefined && { productivityScore })
-        };
 
         res.status(200).json({
             success: true,
             message: "User updated successfully",
-            data: users[userIndex]
+            data: updatedUser,
         });
     } catch (error) {
         next(error);
