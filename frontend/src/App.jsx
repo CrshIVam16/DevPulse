@@ -210,6 +210,7 @@ export default function App() {
             )
           }
         >
+          
           <Route
             path="/dashboard"
             element={
@@ -220,8 +221,10 @@ export default function App() {
                 isLoading={isLoading}
                 searchQuery={globalSearch}
                 onToggleStatus={handleToggleTaskStatus}
-                onDeleteProject={handleDeleteProject}
+                onEditTask={(task) => setEditingTask(task)}
                 onDeleteTask={handleDeleteTask}
+                onEditProject={(project) => setEditingProject(project)}
+                onDeleteProject={handleDeleteProject}
                 onOpenAiModal={handleOpenAiModal}
               />
             }
@@ -240,7 +243,7 @@ export default function App() {
                 onOpenAiModal={handleOpenAiModal}
               />
             }
-            
+
           />
           <Route
             path="/tasks"

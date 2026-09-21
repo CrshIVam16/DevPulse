@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import StatsHeader from '../components/StatsHeader';
@@ -6,7 +6,7 @@ import { ProjectCard } from '../components/ProjectCard';
 import TaskCard from '../components/TaskCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
-// Computes consecutive day activity streak from task timestamps
+// Consecutive day streak calculation based on task timestamps
 const calculateStreakDays = (tasks = []) => {
     if (!tasks.length) return 0;
 
@@ -19,13 +19,11 @@ const calculateStreakDays = (tasks = []) => {
     let streak = 0;
     const cursor = new Date();
 
-    // If no activity logged today, check if yesterday was active before breaking
     const todayStr = cursor.toISOString().split('T')[0];
     if (!activeDates.has(todayStr)) {
         cursor.setDate(cursor.getDate() - 1);
     }
 
-    // Count backwards consecutively
     while (true) {
         const dateStr = cursor.toISOString().split('T')[0];
         if (activeDates.has(dateStr)) {
@@ -36,7 +34,6 @@ const calculateStreakDays = (tasks = []) => {
         }
     }
 
-    // Fallback to 1 if the user has active tasks in their workspace
     return Math.max(streak, tasks.length > 0 ? 1 : 0);
 };
 
@@ -47,20 +44,19 @@ export default function OverviewPage({
     isLoading = false,
     searchQuery = '',
     onToggleStatus,
-    onDeleteProject,
+    onEditTask,
     onDeleteTask,
+    onEditProject,
+    onDeleteProject,
     onOpenAiModal,
 }) {
-    // Real-time metric calculations
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter((t) => t.status === 'done').length;
     const productivityScore =
         totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-    // Dynamic streak computation
     const dynamicStreak = useMemo(() => calculateStreakDays(tasks), [tasks]);
 
-    // Helper: Safely resolve project name whether projectId is a string ID or populated object
     const getProjectTitle = (task) => {
         if (typeof task.projectId === 'object' && task.projectId?.title) {
             return task.projectId.title;
@@ -70,7 +66,6 @@ export default function OverviewPage({
         return matched ? matched.title : 'General';
     };
 
-    // Filter projects by search query
     const filteredProjects = useMemo(() => {
         return projects.filter((project) => {
             return (
@@ -80,7 +75,6 @@ export default function OverviewPage({
         });
     }, [projects, searchQuery]);
 
-    // Filter pending focus tasks by search query
     const filteredFocusTasks = useMemo(() => {
         return tasks
             .filter((t) => t.status !== 'done')
@@ -100,7 +94,7 @@ export default function OverviewPage({
 
     return (
         <div className="space-y-10">
-            {/* 1. Hero Metric Bar with Dynamic Streak */}
+            {/* 1. Metric Header */}
             <StatsHeader
                 userName={user?.name || 'Developer'}
                 activeProjectsCount={projects.length}
@@ -157,7 +151,8 @@ export default function OverviewPage({
                             <ProjectCard
                                 key={project._id || project.id}
                                 project={project}
-                                onDelete={onDeleteProject}
+                                onEdit={() => onEditProject && onEditProject(project)}
+                                onDelete={() => onDeleteProject && onDeleteProject(project._id || project.id)}
                                 onOpenAiModal={onOpenAiModal}
                             />
                         ))}
@@ -197,6 +192,7 @@ export default function OverviewPage({
                                     project: getProjectTitle(task),
                                 }}
                                 onToggleStatus={onToggleStatus}
+                                onEdit={onEditTask}
                                 onDelete={onDeleteTask}
                             />
                         ))}
