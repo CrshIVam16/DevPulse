@@ -1,133 +1,322 @@
-import React, { useState, useMemo } from 'react';
-import Navbar from './components/Navbar';
-import StatsHeader from './components/StatsHeader';
-import { ProjectCard, NewProjectCard } from './components/ProjectCard';
-import TaskFilters from './components/TaskFilters';
-import TaskCard from './components/TaskCard';
-import LoadingSkeleton from './components/LoadingSkeleton';
-import EmptyState from './components/EmptyState';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
-import { mockUserData, mockProjects, mockTasks } from './data/mockData';
+// Layout & Modals
+import DashboardLayout from './components/DashboardLayout';
+import AuthModal from './components/AuthModal';
+import NewProjectModal from './components/NewProjectModal';
+import EditProjectModal from './components/EditProjectModal';
+import NewTaskModal from './components/NewTaskModal';
+import EditTaskModal from './components/EditTaskModal';
+import AiGenerateModal from './components/AiGenerateModal';
+
+// Pages
+import LandingPage from './pages/LandingPage';
+import OverviewPage from './pages/OverviewPage';
+import ProjectsPage from './pages/ProjectsPage';
+import TasksPage from './pages/TasksPage';
+
+// API Services
+import { projectApi, taskApi } from './services/api';
 
 export default function App() {
-  const [tasks, setTasks] = useState(mockTasks);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('devpulse_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [globalSearch, setGlobalSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Toggle Task Completion State
-  const handleToggleStatus = (id) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((t) => {
-        if (t.id === id) {
-          return {
-            ...t,
-            status: t.status === 'done' ? 'in-progress' : 'done',
-          };
-        }
-        return t;
-      })
+  // Modals management
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+
+  // AI Task Generation Modal State
+  const [aiTargetProject, setAiTargetProject] = useState(null);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  const loadUserData = useCallback(async () => {
+    if (!currentUser) {
+      setProjects([]);
+      setTasks([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const [fetchedProjects, fetchedTasks] = await Promise.all([
+        projectApi.getAll(),
+        taskApi.getAll(),
+      ]);
+      setProjects(fetchedProjects);
+      setTasks(fetchedTasks);
+    } catch (err) {
+      console.error('Error loading data from API:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('devpulse_token');
+    localStorage.removeItem('devpulse_user');
+    setCurrentUser(null);
+    setProjects([]);
+    setTasks([]);
+    navigate('/');
+  };
+
+  // Open AI modal for a specific project
+  const handleOpenAiModal = (project) => {
+    setAiTargetProject(project);
+    setIsAiModalOpen(true);
+  };
+
+  // Callback when AI subtasks are created by Inception AI
+  const handleAiTasksGenerated = (newGeneratedTasks) => {
+    setTasks((prev) => [...newGeneratedTasks, ...prev]);
+  };
+
+  const handleTaskUpdated = (updatedTask) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        (t._id || t.id) === (updatedTask._id || updatedTask.id)
+          ? { ...t, ...updatedTask }
+          : t
+      )
     );
   };
 
-  // Reset Filters Callback
-  const handleResetFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setPriorityFilter('all');
+  // Toggle task status
+  const handleToggleTaskStatus = async (id) => {
+    const target = tasks.find((t) => (t._id || t.id) === id);
+    if (!target) return;
+
+    try {
+      const updated = await taskApi.toggleStatus(target._id || target.id, target.status);
+      setTasks((prev) =>
+        prev.map((t) => ((t._id || t.id) === id ? updated : t))
+      );
+    } catch (err) {
+      console.error('Failed to toggle task:', err);
+    }
   };
 
-  // Filter Tasks dynamically
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const matchesSearch =
-        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.project.toLowerCase().includes(searchQuery.toLowerCase());
+  // Delete task
+  const handleDeleteTask = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      await taskApi.delete(id);
+      setTasks((prev) => prev.filter((t) => (t._id || t.id) !== id));
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+    }
+  };
 
-      const matchesStatus =
-        statusFilter === 'all' || task.status.toLowerCase() === statusFilter.toLowerCase();
+  // Delete project
+  const handleDeleteProject = async (id) => {
+    if (!window.confirm("Deleting this project will also delete all its associated tasks. Continue?")) return;
+    try {
+      await projectApi.delete(id);
+      setProjects((prev) => prev.filter((p) => (p._id || p.id) !== id));
+      // Remove linked tasks from state
+      setTasks((prev) =>
+        prev.filter((t) => {
+          const pId = typeof t.projectId === 'object' ? t.projectId?._id : t.projectId;
+          return pId !== id;
+        })
+      );
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+    }
+  };
 
-      const matchesPriority =
-        priorityFilter === 'all' || task.priority.toLowerCase() === priorityFilter.toLowerCase();
+  // Update project in state
+  const handleProjectUpdated = (updatedProject) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        (p._id || p.id) === (updatedProject._id || updatedProject.id)
+          ? { ...p, ...updatedProject }
+          : p
+      )
+    );
+  };
 
-      return matchesSearch && matchesStatus && matchesPriority;
+  // Project progress & dynamic task counters
+  const enrichedProjects = useMemo(() => {
+    return projects.map((project) => {
+      const projectId = project._id || project.id;
+      const linkedTasks = tasks.filter((t) => {
+        const pId = typeof t.projectId === 'object' ? t.projectId?._id : t.projectId;
+        return pId === projectId;
+      });
+
+      const completed = linkedTasks.filter((t) => t.status === 'done').length;
+      const total = linkedTasks.length;
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        ...project,
+        completedTasks: completed,
+        totalTasks: total,
+        progress,
+      };
     });
-  }, [tasks, searchQuery, statusFilter, priorityFilter]);
+  }, [projects, tasks]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white pb-16">
-      {/* 1. Sticky Navigation */}
-      <Navbar searchTerm={searchQuery} setSearchTerm={setSearchQuery} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-10">
-        {/* State Simulator Switch */}
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setIsLoading((prev) => !prev)}
-            className="text-[11px] font-medium px-3 py-1 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-md transition-colors"
-          >
-            Toggle Preview: {isLoading ? 'Showing Loading State' : 'Showing Data'}
-          </button>
-        </div>
-
-        {/* 2. Hero Profile Metrics */}
-        <StatsHeader
-          userName={mockUserData.name}
-          activeProjectsCount={mockUserData.activeProjectsCount}
-          openTasksCount={tasks.filter((t) => t.status !== 'done').length}
-          streakDays={mockUserData.streakDays}
-          productivityScore={mockUserData.productivityScore}
+    <>
+      <Routes>
+        {/* Public Landing */}
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              onOpenAuth={() => setIsAuthOpen(true)}
+              isAuthenticated={!!currentUser}
+            />
+          }
         />
 
-        {/* 3. Loading State Skeleton vs Loaded Data */}
-        {isLoading ? (
-          <LoadingSkeleton />
-        ) : (
-          <>
-            {/* Active Projects Grid */}
-            <section className="space-y-4">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-blue-400">🚀</span> Active Projects
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {mockProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-                <NewProjectCard onClick={() => alert('New Project modal trigger')} />
-              </div>
-            </section>
-
-            {/* Task Management Section */}
-            <section className="space-y-4">
-              <TaskFilters
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                priorityFilter={priorityFilter}
-                setPriorityFilter={setPriorityFilter}
+        {/* Protected Shell: DashboardLayout wraps ALL 3 internal pages */}
+        <Route
+          element={
+            currentUser ? (
+              <DashboardLayout
+                user={currentUser}
+                onLogout={handleLogout}
+                onOpenAuth={() => setIsAuthOpen(true)}
+                searchQuery={globalSearch}
+                setSearchQuery={setGlobalSearch}
+                projects={enrichedProjects}
+                tasks={tasks}
+                projectCount={projects.length}
+                taskCount={tasks.length}
               />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        >
+          <Route
+            path="/dashboard"
+            element={
+              <OverviewPage
+                user={currentUser}
+                projects={enrichedProjects}
+                tasks={tasks}
+                isLoading={isLoading}
+                searchQuery={globalSearch}
+                onToggleStatus={handleToggleTaskStatus}
+                onDeleteProject={handleDeleteProject}
+                onDeleteTask={handleDeleteTask}
+                onOpenAiModal={handleOpenAiModal}
+              />
+            }
+          />
 
-              {filteredTasks.length === 0 ? (
-                <EmptyState onReset={handleResetFilters} />
-              ) : (
-                <div className="space-y-2.5">
-                  {filteredTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onToggleStatus={handleToggleStatus}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-      </main>
-    </div>
+          <Route
+            path="/projects"
+            element={
+              <ProjectsPage
+                projects={enrichedProjects}
+                isLoading={isLoading}
+                searchQuery={globalSearch}
+                onOpenCreateModal={() => setIsNewProjectOpen(true)}
+                onEditProject={(project) => setEditingProject(project)}
+                onDeleteProject={handleDeleteProject}
+                onOpenAiModal={handleOpenAiModal}
+              />
+            }
+            
+          />
+          <Route
+            path="/tasks"
+            element={
+              <TasksPage
+                tasks={tasks}
+                projects={enrichedProjects} // Pass projects to resolve project names
+                isLoading={isLoading}
+                searchQuery={globalSearch}
+                onToggleStatus={handleToggleTaskStatus}
+                onEditTask={(task) => setEditingTask(task)}
+                onDeleteTask={handleDeleteTask}
+                onOpenCreateModal={() => setIsNewTaskOpen(true)}
+              />
+            }
+          />
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onAuthSuccess={(user) => {
+          setCurrentUser(user);
+          navigate('/dashboard');
+        }}
+      />
+
+      {/* Project Creation & Edit Modals */}
+      <NewProjectModal
+        isOpen={isNewProjectOpen}
+        onClose={() => setIsNewProjectOpen(false)}
+        onProjectCreated={(newProject) =>
+          setProjects((prev) => [newProject, ...prev])
+        }
+      />
+
+      <EditProjectModal
+        isOpen={!!editingProject}
+        project={editingProject}
+        onClose={() => setEditingProject(null)}
+        onProjectUpdated={handleProjectUpdated}
+      />
+
+      {/* Task Creation & Edit Modals */}
+      <NewTaskModal
+        isOpen={isNewTaskOpen}
+        onClose={() => setIsNewTaskOpen(false)}
+        projects={projects}
+        onTaskCreated={(newTask) =>
+          setTasks((prev) => [newTask, ...prev])
+        }
+      />
+
+      <EditTaskModal
+        isOpen={!!editingTask}
+        task={editingTask}
+        projects={projects}
+        onClose={() => setEditingTask(null)}
+        onTaskUpdated={handleTaskUpdated}
+      />
+
+      {/* AI Task Decomposition Modal */}
+      <AiGenerateModal
+        project={aiTargetProject}
+        isOpen={isAiModalOpen}
+        onClose={() => {
+          setIsAiModalOpen(false);
+          setAiTargetProject(null);
+        }}
+        onTasksGenerated={handleAiTasksGenerated}
+      />
+    </>
   );
 }

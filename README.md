@@ -1,151 +1,117 @@
-# ⚡ DevPulse — Full Stack Developer Productivity Platform
 
-**DevPulse** is a modern, full-stack developer productivity platform developed as part of the **Innovation Hacks Full Stack Development Internship**. The project follows an industry-oriented build progressing from a responsive frontend to a standalone REST API, followed by persistent database integration and AI capabilities.
+# ⚡ DevPulse — Full-Stack AI Developer Platform
 
-![DevPulse Dashboard Preview](Screenshot%202026-08-29%20092430.png)
-![DevPulse Task Management Preview](Screenshot%202026-08-29%20092441.png)
+**DevPulse** is an AI-powered developer productivity and project management platform built for the **Innovation Hacks Full Stack Internship**. It decomposes project scopes into prioritized sprints, manages tasks across full lifecycles, and pairs a ChatGPT/Gemini-style navigation interface with a resilient MERN and LLM backend.
 
+![landing Page](image.png)
 ---
 
-## 🗺️ Internship Progress & Milestones
+## 🗺️ Milestone Checklist
 
 - [x] **Task 1: Modern Frontend Development** (Completed)
 - [x] **Task 2: Backend & REST API Development** (Completed)
 - [x] **Task 3: Persistent Data Layer (Database Integration)** (Completed)
-- [ ] **Task 4: AI-Powered Platform & Full-Stack Deployment** (Upcoming)
+- [x] **Task 4: AI Integration & Full-Stack Deployment** (Completed)
 
 ---
 
-## 🚀 Task 1: Frontend Dashboard (Completed)
+## 🚀 Key Features
 
-Built a single-page productivity dashboard emphasizing component reusability, responsive design, and robust UI edge states.
+### 1. ChatGPT/Gemini-Style Dashboard Shell
+- **Responsive Layout:** Sticky top navbar with global search, action controls, and an isolated desktop icon rail.
+- **Mobile Slide-Over Drawer:** Accessible side drawer for smooth navigation across Overview, Projects, and Tasks without page overflow.
+- **Dynamic Developer Profiles:** User registration supporting professional titles and Base64 avatar uploads rendered dynamically across headers and navigation.
 
-### Key Features
-- **Developer Metrics & SVG Progress:** Visual header tracking active projects, commit streaks, open tasks, and an SVG-based dynamic circular productivity score.
-- **Project Showcase:** Status chips and dynamic progress tracking bars.
-- **Task Management System:** Real-time multi-criteria filtering by text search, status tabs (*All, Todo, In-Progress, Done*), and priority levels (*High, Medium, Low*).
-- **Interactive Checklists:** Instant completion status toggling that updates open task counters in real time.
-- **Edge States:** Custom skeleton loading screens (`animate-pulse`) and zero-result empty state fallbacks with one-click reset.
+### 2. AI-Powered Project Decomposition (Inception Labs)
+- **One-Click Task Generation:** Integrated with **Inception Labs (`mercury-2`)** via OpenAI-compatible endpoints.
+- **Structured Sprints:** Analyzes project scopes and auto-generates prioritized subtasks with calculated due dates.
+- **Interactive AI Modal:** `AiGenerateModal` gives live decomposition feedback with loaders, error handling, and direct database synchronization.
 
-### Tech Stack
-- **Framework:** React.js + Vite
-- **Styling:** Tailwind CSS v4
-- **Icons:** Lucide React
+### 3. Productivity Metrics & Activity Streaks
+- **Dynamic Streak Calculation:** Tracks consecutive daily activity streaks calculated directly from task creation and update timestamps in MongoDB.
+- **SVG Productivity Ring:** Real-time completion ratio tracking with dynamic progress bars across individual projects and global sprints.
 
----
-
-## 🛠️ Task 2: Backend & REST API (Completed)
-
-Designed and implemented a modular Express.js REST API powering user metrics, projects, and task lifecycles with centralized error handling and strict input validation[cite: 1, 2].
-
-### Key Features
-- **Modular Controller-Route Architecture:** Decoupled routes, controllers, and operational handlers following MVC standards[cite: 1, 2].
-- **Task Lifecycle & Status Management:** Complete CRUD endpoints supporting status transitions (`todo`, `in-progress`, `done`) and query-based filtering (`?status=`, `?priority=`)[cite: 2].
-- **Strict Input Validation:** Route-level middleware rejecting malformed payloads and invalid enum values with `400 Bad Request`[cite: 2].
-- **Centralized Error Handling:** Global error-handling middleware returning standardized JSON responses with accurate HTTP status codes (`200`, `201`, `400`, `404`, `500`)[cite: 2].
-- **Environment Security:** Isolated environment variable handling via `dotenv` with safe configuration templates (`.env.example`)[cite: 1, 2].
+### 4. Full-Stack Data & Security Pipeline
+- **JWT Authentication:** Secure signup, login, session persistence (`/api/auth/me`), and route guards with `bcryptjs` password hashing.
+- **Mongoose Relational Schemas:** Strong `ObjectId` references connecting Users, Projects, and Tasks with automated `.populate()` queries.
+- **Config Resilience:** Direct-read configuration helpers to eliminate environment variable caching issues across ES modules.
 
 ---
 
-## 🗄️ Task 3: Persistent Data Layer (Completed)
+## 🛠️ Tech Stack
 
-Replaced temporary in-memory storage with a persistent database architecture powered by **MongoDB** and **Mongoose**, establishing schema-level constraints and relational document references[cite: 1, 3].
-
-### Key Features
-- **Relational Data Modeling:** Model relationships configured using Mongoose `ObjectId` references (`Task` referencing `User` and `Project`; `Project` referencing `User`)[cite: 1, 3].
-- **Schema-Level Validation & Enums:** Enforced regex email checks, required title constraints, and status/priority enum whitelisting directly at the database layer[cite: 3].
-- **Populated Native CRUD:** Upgraded controllers with asynchronous Mongoose queries (`find`, `findById`, `findByIdAndUpdate`, `findByIdAndDelete`) combined with `.populate()` lookups[cite: 3].
-- **Database Seeder:** Created an automated database seeder (`src/config/seeder.js`) populating consistent test fixtures matching the frontend interface[cite: 1, 3].
-
-### API Reference
-| Method | Endpoint | Description | Status Codes |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | Health check route | `200` |
-| `GET` | `/api/users/:id` | Fetch user profile & productivity score from DB | `200`, `404` |
-| `PATCH` | `/api/users/:id` | Update user details (validated) | `200`, `404` |
-| `GET` | `/api/projects` | List all projects (populated with user) | `200` |
-| `GET` | `/api/projects/:id` | Fetch project by ID (populated with user) | `200`, `404` |
-| `POST` | `/api/projects` | Create a persistent project document | `201`, `400` |
-| `GET` | `/api/tasks` | Get tasks (supports `?status=`, `?priority=`, `?projectId=`) | `200` |
-| `POST` | `/api/tasks` | Create task with relational foreign keys | `201`, `400` |
-| `PUT` | `/api/tasks/:id` | Update task details & status in DB | `200`, `400`, `404` |
-| `DELETE` | `/api/tasks/:id` | Permanently delete task document | `200`, `404` |
+- **Frontend:** React 18, Vite, Tailwind CSS, Lucide React, React Router
+- **Backend:** Node.js, Express.js (10MB body parser for image uploads), OpenAI SDK
+- **Database:** MongoDB, Mongoose ODM
+- **AI Microservice:** Inception Labs API (`mercury-2`)
+- **Authentication:** JSON Web Tokens (JWT), Bcrypt.js
 
 ---
 
-## 🔮 Upcoming Milestones
+## 📡 API Reference
 
-- **Task 4: AI Integration & Full-Stack Deployment**
-  - Add user registration, login, and JWT-protected routes.
-  - Integrate an AI service for automatic task generation, summarization, or priority recommendations.
-  - Connect the React frontend to live backend endpoints and deploy the complete system to cloud hosting (Vercel & Render).
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/auth/register` | Register user with role & avatar | No |
+| `POST` | `/api/auth/login` | Authenticate user & issue JWT | No |
+| `GET` | `/api/auth/me` | Fetch active authenticated session | Yes |
+| `GET` | `/api/projects` | Get user projects with task counters | Yes |
+| `POST` | `/api/projects` | Create new persistent project | Yes |
+| `PUT` | `/api/projects/:id` | Update project metadata | Yes |
+| `DELETE` | `/api/projects/:id` | Delete project and associated tasks | Yes |
+| `GET` | `/api/tasks` | Get tasks with status/priority filters | Yes |
+| `POST` | `/api/tasks` | Create task with relational foreign keys | Yes |
+| `PUT` | `/api/tasks/:id` | Update task details or toggle status | Yes |
+| `DELETE` | `/api/tasks/:id` | Permanently remove task | Yes |
+| `POST` | `/api/ai/generate-tasks` | Decompose project into subtasks via `mercury-2` | Yes |
 
 ---
 
-## 📁 Project Architecture
+## ⚙️ Quickstart
 
-```text
-DEVPULSE/
-├── frontend/                     # Task 1: React + Vite SPA
-│   ├── src/
-│   │   ├── components/           # Modular UI components
-│   │   ├── data/                 # Task 1 local mock datasets
-│   │   ├── App.jsx               # State management & dynamic filtering
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-│
-├── backend/                      # Tasks 2 & 3: Express REST API + MongoDB
-│   ├── src/
-│   │   ├── config/               # Database connection (db.js) & seeder.js
-│   │   ├── models/               # Mongoose Schemas (User, Project, Task)
-│   │   ├── controllers/          # Asynchronous DB CRUD handlers
-│   │   ├── routes/               # Express sub-routers
-│   │   ├── middleware/           # Input validation & centralized error handlers
-│   │   ├── app.js                # Express app setup & route mounting
-│   │   └── server.js             # HTTP server entrypoint
-│   ├── .env.example              # Environment variables template
-│   └── package.json
-│
-├── .gitignore                    # Global ignore (node_modules, .env)
-└── README.md
+### 1. Clone & Setup
+```bash
+git clone [https://github.com/CrshIVam16/DevPulse.git](https://github.com/CrshIVam16/DevPulse.git)
+cd DevPulse
 ```
 
----
+### 2. Backend Setup
 
-## ⚙️ Local Setup & Running the Project
+```bash
+cd backend
+npm install
+```
 
-**1. Clone the repository**
+Create `backend/.env`:
 
-- git clone https://github.com/CrshIVam16/DevPulse.git
-- cd DevPulse
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb://127.0.0.1:27017/devpulse
+JWT_SECRET=your_jwt_secret_key
+INCEPTION_API_KEY=your_inception_labs_api_key
+```
 
-**2. Frontend Setup (Task 1)**
+```bash
+npm run dev
+```
 
-- cd frontend
-- npm install
-- npm run dev
+### 3. Frontend Setup
 
-**3. Backend & DB Setup (Task 2)**
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
 
-- cd backend
-- npm install
-- cp .env.example .env
-- npm run seed
-- npm run dev
-
----
-
-## 🔗 Live Links
-
-**Videos**
-
-- [Task-1](https://drive.google.com/file/d/1MbvTNF2w0EB_2hszRwhUZnFN04ufCouV/view)
-- [Task-2](https://drive.google.com/file/d/1VFpWbKJPlWHtbqnS1cWkO_DCG-acvsDs/view?usp=sharing)
-- [Task-3](https://drive.google.com/file/d/1ph9oJakKwXxmIIaArei35DSGsWyXX3h-/view?usp=sharing)
-
-**Live Project**
-
-- [Live-Project](https://dev-pulse-seven-blue.vercel.app/)
+Open `http://localhost:5173` in your browser.
 
 ---
+
+## 🔗 Submission Links
+
+* **Task 1 Video:** [Watch Demo](https://drive.google.com/file/d/1MbvTNF2w0EB_2hszRwhUZnFN04ufCouV/view?utm_source=gemini)
+* **Task 2 Video:** [Watch Demo](https://drive.google.com/file/d/1VFpWbKJPlWHtbqnS1cWkO_DCG-acvsDs/view?usp=sharing&utm_source=gemini)
+* **Task 3 Video:** [Watch Demo](https://drive.google.com/file/d/1ph9oJakKwXxmIIaArei35DSGsWyXX3h-/view?usp=sharing&utm_source=gemini)
+* **Task 4 Capstone Video:** [Watch Full Walkthrough](https://drive.google.com/?utm_source=gemini) *(Add your link)*
+* **Live Deployment:** [DevPulse Production App](https://dev-pulse-seven-blue.vercel.app/?utm_source=gemini)

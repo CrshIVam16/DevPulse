@@ -5,8 +5,8 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
-  server: {
-    host: true,
-    allowedHosts: true
-  }
+  // server: {
+  //   host: true,
+  //   allowedHosts: true
+  // }
 })

@@ -1,16 +1,21 @@
 import { Router } from "express";
-import { getProjects, getProjectById, createProject } from "../controllers/projectController.js";
-import { validateProjectInput } from "../middleware/validate.js";
+import {
+    getProjects,
+    getProjectById,
+    createProject,
+    updateProject,
+    deleteProject,
+} from "../controllers/projectController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-// GET /api/projects - Retrieve all projects
+router.use(protect);
+
 router.get("/", getProjects);
-
-// GET /api/projects/:id - Retrieve single project by ID
 router.get("/:id", getProjectById);
-
-// POST /api/projects - Create a new project (validated)
-router.post("/", validateProjectInput, createProject);
+router.post("/", createProject);
+router.put("/:id", updateProject); // Mount project update route
+router.delete("/:id", deleteProject);
 
 export default router;

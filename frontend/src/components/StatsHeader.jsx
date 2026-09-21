@@ -1,115 +1,122 @@
-import { Folder, CheckSquare, Flame } from 'lucide-react';
+
+import { Flame, CheckCircle2, FolderGit2 } from 'lucide-react';
 
 export default function StatsHeader({
-    userName = "Alex",
-    activeProjectsCount = 3,
-    openTasksCount = 12,
-    streakDays = 5,
-    productivityScore = 85
+    userName = 'Developer',
+    activeProjectsCount = 0,
+    openTasksCount = 0,
+    streakDays = 0,
+    productivityScore = 0,
 }) {
-    // SVG circular progress calculation
-    const radius = 54;
+    // SVG circular calculation: radius = 34, perimeter = 2 * PI * 34 ≈ 213.6
+    const radius = 34;
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (productivityScore / 100) * circumference;
 
     return (
-        <div className="w-full bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-xl">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+        <div className="relative overflow-hidden rounded-2xl bg-slate-900/60 border border-slate-800 p-6 shadow-xl">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
 
-                {/* Left: Greeting and Stat Badges */}
-                <div className="flex-1 space-y-6">
-                    <div className="space-y-1.5">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                            Welcome back, {userName}!
+                {/* Left: User Welcome & Metrics */}
+                <div className="space-y-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-white tracking-tight">
+                            Welcome back, <span className="text-blue-400">{userName}</span> 👋
                         </h1>
-                        <p className="text-sm sm:text-base text-slate-400">
-                            You're maintaining a solid pace this week. Keep the momentum going.
+                        <p className="text-xs text-slate-400 mt-1">
+                            Here is what is happening across your projects and tasks today.
                         </p>
                     </div>
 
-                    {/* Metric Pills */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="flex items-center gap-3.5 p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl">
-                            <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg shrink-0">
-                                <Folder className="w-5 h-5" />
+                    {/* Dynamic Metrics Row */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Active Projects */}
+                        <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg shrink-0">
+                                <FolderGit2 className="w-4 h-4" />
                             </div>
                             <div>
-                                <span className="text-lg font-bold text-white block leading-tight">
+                                <span className="text-base font-bold text-white block leading-none">
                                     {activeProjectsCount}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">Active Projects</span>
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                    Active Projects
+                                </span>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3.5 p-3.5 bg-slate-950/60 border border-slate-800 rounded-lg">
-                            <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-lg shrink-0">
-                                <CheckSquare className="w-5 h-5" />
+                        {/* Open Tasks */}
+                        <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                            <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg shrink-0">
+                                <CheckCircle2 className="w-4 h-4" />
                             </div>
                             <div>
-                                <span className="text-lg font-bold text-white block leading-tight">
+                                <span className="text-base font-bold text-white block leading-none">
                                     {openTasksCount}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">Open Tasks</span>
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                    Open Tasks
+                                </span>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3.5 p-3.5 bg-slate-950/60 border border-slate-800 rounded-lg">
-                            <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-lg shrink-0">
-                                <Flame className="w-5 h-5" />
+                        {/* Dynamic Activity Streak */}
+                        <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-lg shrink-0">
+                                <Flame className="w-4 h-4" />
                             </div>
                             <div>
-                                <span className="text-lg font-bold text-white block leading-tight">
-                                    {streakDays}-day
+                                <span className="text-base font-bold text-white block leading-none">
+                                    {streakDays} {streakDays === 1 ? 'day' : 'days'}
                                 </span>
-                                <span className="text-xs text-slate-400 font-medium">Commit Streak</span>
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                    Active Streak
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Right: Productivity Score Circular Indicator */}
-                <div className="flex flex-col items-center justify-center shrink-0 self-center lg:self-auto">
-                    <div className="relative w-36 h-36 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
+                <div className="flex items-center gap-4 bg-slate-950/60 border border-slate-800 p-4 rounded-xl self-start lg:self-auto">
+                    <div className="relative w-20 h-20 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
                             {/* Background Ring */}
                             <circle
-                                cx="64"
-                                cy="64"
+                                cx="40"
+                                cy="40"
                                 r={radius}
                                 className="stroke-slate-800"
-                                strokeWidth="10"
+                                strokeWidth="6"
                                 fill="transparent"
                             />
-                            {/* Progress Ring with Gradient */}
+                            {/* Progress Ring */}
                             <circle
-                                cx="64"
-                                cy="64"
+                                cx="40"
+                                cy="40"
                                 r={radius}
-                                className="transition-all duration-1000 ease-out"
-                                stroke="url(#productivity-gradient)"
-                                strokeWidth="10"
+                                className="stroke-blue-500 transition-all duration-700 ease-out"
+                                strokeWidth="6"
                                 strokeDasharray={circumference}
                                 strokeDashoffset={strokeDashoffset}
                                 strokeLinecap="round"
                                 fill="transparent"
                             />
-                            <defs>
-                                <linearGradient id="productivity-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#3B82F6" />
-                                    <stop offset="100%" stopColor="#8B5CF6" />
-                                </linearGradient>
-                            </defs>
                         </svg>
-
-                        {/* Center Label */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <span className="text-3xl font-extrabold text-white tracking-tight">
+                        <div className="absolute flex flex-col items-center justify-center text-center">
+                            <span className="text-sm font-bold text-white leading-none">
                                 {productivityScore}%
                             </span>
-                            <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 mt-0.5">
-                                Productivity<br />Score
-                            </span>
                         </div>
+                    </div>
+
+                    <div>
+                        <span className="text-xs font-semibold text-white block">
+                            Productivity
+                        </span>
+                        <p className="text-[11px] text-slate-400">
+                            Completed ratio of all tracked tasks
+                        </p>
                     </div>
                 </div>
 

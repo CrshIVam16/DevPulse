@@ -1,20 +1,21 @@
-
 import Task from "../models/Task.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
-// GET /api/tasks (Dynamic database filtering)
+// GET /api/tasks (Scoped to authenticated user with query filters)
 export const getTasks = async (req, res, next) => {
     try {
         const { status, priority, projectId } = req.query;
 
-        const filterQuery = {};
-        if (status) filterQuery.status = status.toLowerCase();
-        if (priority) filterQuery.priority = priority;
-        if (projectId) filterQuery.projectId = projectId;
+        const filter = { userId: req.user._id };
 
-        const tasks = await Task.find(filterQuery)
+        if (status && status !== "all") filter.status = status.toLowerCase();
+        if (priority && priority !== "all") filter.priority = priority;
+        if (projectId) filter.projectId = projectId;
+
+        const tasks = await Task.find(filter)
             .populate("projectId", "title status")
-            .populate("userId", "name email");
+            .populate("userId", "name email")
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -29,21 +30,33 @@ export const getTasks = async (req, res, next) => {
 // POST /api/tasks
 export const createTask = async (req, res, next) => {
     try {
-        const { title, projectId, userId, dueDate, priority, status } = req.body;
+        const { title, projectId, priority, dueDate, status } = req.body;
 
-        const newTask = await Task.create({
+        if (!title || !title.trim()) {
+            throw new ApiError("Task title is required", 400);
+        }
+        if (!projectId) {
+            throw new ApiError("Task must be assigned to a valid Project ID", 400);
+        }
+
+        const task = await Task.create({
             title: title.trim(),
             projectId,
-            userId,
-            dueDate: dueDate || new Date().toISOString().split("T")[0],
+            userId: req.user._id,
             priority: priority || "Medium",
             status: status ? status.toLowerCase() : "todo",
+            dueDate: dueDate || new Date().toISOString().split("T")[0],
         });
+
+        const populatedTask = await Task.findById(task._id).populate(
+            "projectId",
+            "title status"
+        );
 
         res.status(201).json({
             success: true,
             message: "Task created successfully",
-            data: newTask,
+            data: populatedTask,
         });
     } catch (error) {
         next(error);
@@ -54,28 +67,21 @@ export const createTask = async (req, res, next) => {
 export const updateTask = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { title, dueDate, priority, status, projectId } = req.body;
 
-        const updatedTask = await Task.findByIdAndUpdate(
-            id,
-            {
-                ...(title && { title: title.trim() }),
-                ...(dueDate && { dueDate }),
-                ...(priority && { priority }),
-                ...(status && { status: status.toLowerCase() }),
-                ...(projectId && { projectId }),
-            },
+        const task = await Task.findOneAndUpdate(
+            { _id: id, userId: req.user._id },
+            req.body,
             { new: true, runValidators: true }
-        );
+        ).populate("projectId", "title status");
 
-        if (!updatedTask) {
-            throw new ApiError(`Task with ID '${id}' not found`, 404);
+        if (!task) {
+            throw new ApiError(`Task with ID '${id}' not found or unauthorized`, 404);
         }
 
         res.status(200).json({
             success: true,
             message: "Task updated successfully",
-            data: updatedTask,
+            data: task,
         });
     } catch (error) {
         next(error);
@@ -86,16 +92,20 @@ export const updateTask = async (req, res, next) => {
 export const deleteTask = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const deletedTask = await Task.findByIdAndDelete(id);
 
-        if (!deletedTask) {
-            throw new ApiError(`Task with ID '${id}' not found`, 404);
+        const task = await Task.findOneAndDelete({
+            _id: id,
+            userId: req.user._id,
+        });
+
+        if (!task) {
+            throw new ApiError(`Task with ID '${id}' not found or unauthorized`, 404);
         }
 
         res.status(200).json({
             success: true,
-            message: "Task deleted successfully from database",
-            data: deletedTask,
+            message: "Task deleted successfully",
+            data: { id },
         });
     } catch (error) {
         next(error);

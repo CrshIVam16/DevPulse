@@ -1,19 +1,15 @@
 import { Router } from "express";
 import { getTasks, createTask, updateTask, deleteTask } from "../controllers/taskController.js";
-import { validateTaskInput } from "../middleware/validate.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-// GET /api/tasks - List all tasks (supports query filtering by ?status, ?priority, ?projectId)
+// Lock all task routes behind authentication
+router.use(protect);
+
 router.get("/", getTasks);
-
-// POST /api/tasks - Create a new task (validated)
-router.post("/", validateTaskInput, createTask);
-
-// PUT /api/tasks/:id - Update task details & handle status changes (validated)
-router.put("/:id", validateTaskInput, updateTask);
-
-// DELETE /api/tasks/:id - Delete a task by ID
+router.post("/", createTask);
+router.put("/:id", updateTask);
 router.delete("/:id", deleteTask);
 
 export default router;
