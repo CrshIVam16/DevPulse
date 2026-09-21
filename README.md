@@ -113,5 +113,5 @@ Open `http://localhost:5173` in your browser.
 * **Task 1 Video:** [Watch Demo](https://drive.google.com/file/d/1MbvTNF2w0EB_2hszRwhUZnFN04ufCouV/view?utm_source=gemini)
 * **Task 2 Video:** [Watch Demo](https://drive.google.com/file/d/1VFpWbKJPlWHtbqnS1cWkO_DCG-acvsDs/view?usp=sharing&utm_source=gemini)
 * **Task 3 Video:** [Watch Demo](https://drive.google.com/file/d/1ph9oJakKwXxmIIaArei35DSGsWyXX3h-/view?usp=sharing&utm_source=gemini)
-* **Task 4 Capstone Video:** [Watch Full Walkthrough](https://drive.google.com/?utm_source=gemini) *(Add your link)*
+* **Task 4 Capstone Video:** [Watch Full Walkthrough](https://drive.google.com/file/d/1KGAzVvO8sOEa5plHoBWvmT9xzbtRR0m1/view?usp=sharing)
 * **Live Deployment:** [DevPulse Production App](https://dev-pulse-seven-blue.vercel.app/?utm_source=gemini)
